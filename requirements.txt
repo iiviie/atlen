@@ -1,0 +1,9 @@
+asgiref
+Django
+djangorestframework
+python-decouple
+sqlparse
+psycopg2-binary
+django-environ
+gunicorn
+whitenoise
