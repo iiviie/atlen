@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'django.contrib.gis',
     'authentication',
     'drf_yasg',
+    'drf_spectacular',
 ]
 
 MIDDLEWARE = [
@@ -148,7 +149,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-    )
+    ),
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
 AUTH_USER_MODEL = 'authentication.User'
@@ -165,3 +167,16 @@ EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
 EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Authentication API',
+    'DESCRIPTION': 'API endpoints for user authentication, registration, and password management',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': True,
+    
+    # Schema customizations
+    'COMPONENT_SPLIT_REQUEST': True,
+    'SCHEMA_PATH_PREFIX': '/api/v1/',
+}
+

@@ -15,6 +15,7 @@ Pillow
 djangorestframework-simplejwt
 requests
 drf-yasg
+drf-spectacular
 
 
 
