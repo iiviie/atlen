@@ -46,7 +46,8 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
     'django.contrib.gis',
-    'authentication'
+    'authentication',
+    'drf_yasg',
 ]
 
 MIDDLEWARE = [

@@ -14,6 +14,7 @@ django-allauth
 Pillow
 djangorestframework-simplejwt
 requests
+drf-yasg
 
 
 
