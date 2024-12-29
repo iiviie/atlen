@@ -17,9 +17,6 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 class RegisterView(APIView):
-    """
-    Handle user registration with email verification.
-    """
     permission_classes = (AllowAny,)
     
     @extend_schema(
@@ -46,9 +43,6 @@ class RegisterView(APIView):
         }, status=status.HTTP_400_BAD_REQUEST)
 
 class LoginView(APIView):
-    """
-    Handle user login and token generation.
-    """
     permission_classes = (AllowAny,)
     
     @extend_schema(
@@ -97,9 +91,6 @@ class LoginView(APIView):
         }, status=status.HTTP_400_BAD_REQUEST)
 
 class VerifyOTPView(APIView):
-    """
-    Handle OTP verification for both registration and password reset.
-    """
     permission_classes = (AllowAny,)
     
     @extend_schema(
@@ -164,9 +155,6 @@ class VerifyOTPView(APIView):
         }, status=status.HTTP_400_BAD_REQUEST)
 
 class ForgotPasswordView(APIView):
-    """
-    Handle forgot password requests by sending OTP.
-    """
     permission_classes = (AllowAny,)
     
     @extend_schema(
@@ -199,9 +187,6 @@ class ForgotPasswordView(APIView):
         }, status=status.HTTP_400_BAD_REQUEST)
 
 class ResetPasswordView(APIView):
-    """
-    Handle password reset after OTP verification.
-    """
     permission_classes = (AllowAny,)
     
     @extend_schema(
