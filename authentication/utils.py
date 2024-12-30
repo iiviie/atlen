@@ -7,6 +7,8 @@ from django.utils.html import strip_tags
 from django.utils import timezone
 from django.conf import settings
 import threading
+from .models import OTPVerification
+
 
 def generate_otp():
     """Generate a random 6-digit OTP."""
@@ -17,7 +19,7 @@ def is_otp_valid(user):
     Check if user's OTP is still valid (not expired).
     OTP expires after 10 minutes.
     """
-    if not user.otp_created_at:
+    if not user.otp or not user.otp_created_at:
         return False
     
     expiry_time = user.otp_created_at + timedelta(minutes=10)
@@ -45,16 +47,16 @@ class EmailThread(threading.Thread):
         )
 
 def send_otp_email(user, verification_type):
-    """
-    Generate OTP, save it to user model, and send via email.
-    Different email templates can be used based on verification_type.
-    """
-    # Generate new OTP
+    """Generate OTP, save it to OTPVerification model, and send via email."""
     otp = generate_otp()
-    user.otp = otp
-    user.otp_created_at = timezone.now()
-    user.save()
-
+    
+    # Create new OTP verification record
+    OTPVerification.objects.create(
+        user=user,
+        otp=otp,
+        verification_type=verification_type
+    )
+    
     # Prepare email content
     template_name = (
         'registration_otp_email.html' 
