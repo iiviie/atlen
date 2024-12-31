@@ -2,6 +2,8 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+import re
+
 
 User = get_user_model()
 
@@ -46,6 +48,11 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
                 raise ValidationError({'username': 'This username is already taken.'})
                 
         return data
+    
+    def validate_password(self, value):
+        if not re.match(r'^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$', value):
+            raise ValidationError('Password must contain at least 8 characters, including uppercase, lowercase, numbers and special characters.')
+        return value
 
     def create(self, validated_data):
         # Remove confirm_password from the data
@@ -99,3 +106,8 @@ class PasswordResetSerializer(serializers.Serializer):
         if data.get('new_password') != data.get('confirm_password'):
             raise ValidationError({'confirm_password': 'Passwords do not match.'})
         return data
+    
+    def validate_password(self, value):
+        if not re.match(r'^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$', value):
+            raise ValidationError('Password must contain at least 8 characters, including uppercase, lowercase, numbers and special characters.')
+        return value
