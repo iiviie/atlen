@@ -1,11 +1,5 @@
 from django.urls import path
-from .views import (
-    RegisterView,
-    LoginView,
-    VerifyOTPView,
-    ForgotPasswordView,
-    ResetPasswordView,
-)
+from .views import *
 from rest_framework_simplejwt.views import (
     TokenRefreshView,
     TokenVerifyView,
@@ -26,4 +20,7 @@ urlpatterns = [
     # JWT token management endpoints
     path('token/refresh/', TokenRefreshView.as_view(), name='token-refresh'),
     path('token/verify/', TokenVerifyView.as_view(), name='token-verify'),
+    
+    path('google/', GoogleLoginView.as_view(), name='google-login'),
+
 ]

@@ -111,3 +111,10 @@ class PasswordResetSerializer(serializers.Serializer):
         if not re.match(r'^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$', value):
             raise ValidationError('Password must contain at least 8 characters, including uppercase, lowercase, numbers and special characters.')
         return value
+    
+    
+class GoogleAuthSerializer(serializers.Serializer):
+    auth_token = serializers.CharField()
+    
+    class Meta:
+        fields = ('auth_token',)

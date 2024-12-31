@@ -16,6 +16,8 @@ djangorestframework-simplejwt
 requests
 drf-yasg
 drf-spectacular
+google-auth
+google-auth-oauthlib
 
 
 
