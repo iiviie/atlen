@@ -3,13 +3,15 @@ from django.db import models
 from .managers import CustomUserManager
 
 class User(AbstractUser):
+    username = None  # Remove username field
     email = models.EmailField(unique=True)
     is_verified = models.BooleanField(default=False)
+    is_registered = models.BooleanField(default=False)
     otp = models.CharField(max_length=6, null=True, blank=True)
     otp_created_at = models.DateTimeField(null=True, blank=True)
     
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username']
+    REQUIRED_FIELDS = []  # Remove username from required fields
 
     objects = CustomUserManager()
 

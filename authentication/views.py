@@ -1,4 +1,3 @@
-import requests
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -6,18 +5,58 @@ from rest_framework.permissions import AllowAny
 from django.contrib.auth import authenticate, get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
 from drf_spectacular.utils import extend_schema
-from .serializers import *
+from rest_framework import serializers
+import requests
+from .serializers import (
+    AuthenticationResponseSerializer, UserRegistrationSerializer,
+    OTPVerificationSerializer, PasswordResetSerializer, GoogleAuthSerializer
+)
 from .services import OTPService
-from google.oauth2 import id_token
-from django.conf import settings
+
 User = get_user_model()
 
-class LoginView(APIView):
+class BaseAuthView(APIView):
     permission_classes = [AllowAny]
-    
-    @extend_schema(
-        responses={200: AuthenticationResponseSerializer}
-    )
+
+    def create_response(self, success, message, data=None, errors=None, status_code=status.HTTP_200_OK):
+        response_data = {
+            'success': success,
+            'message': message
+        }
+        if data:
+            response_data['data'] = data
+        if errors:
+            response_data['errors'] = errors
+        return Response(response_data, status=status_code)
+
+class CheckEmailView(BaseAuthView):
+    @extend_schema(responses={200: AuthenticationResponseSerializer})
+    def post(self, request):
+        email = request.data.get('email')
+        if not email:
+            return self.create_response(
+                False, 'Email is required.', 
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
+
+        user = User.objects.filter(email=email).first()
+        if not user:
+            return self.create_response(
+                True, 'Email not registered.',
+                data={'is_registered': False, 'is_verified': False}
+            )
+
+        return self.create_response(
+            True, 'User found.',
+            data={
+                'is_registered': user.is_registered,
+                'is_verified': user.is_verified,
+                'email': user.email
+            }
+        )
+
+class LoginView(BaseAuthView):
+    @extend_schema(responses={200: AuthenticationResponseSerializer})
     def post(self, request):
         email = request.data.get('email')
         password = request.data.get('password')
@@ -25,102 +64,76 @@ class LoginView(APIView):
         user = authenticate(request, email=email, password=password)
         
         if not user:
-            return Response({
-                'success': False,
-                'message': 'Invalid credentials.'
-            }, status=status.HTTP_401_UNAUTHORIZED)
+            return self.create_response(
+                False, 'Invalid credentials.',
+                status_code=status.HTTP_401_UNAUTHORIZED
+            )
 
-        if not user.is_verified:
-            OTPService.create_and_send_otp(user, 'registration')
-            return Response({
-                'success': False,
-                'message': 'Email not verified. New OTP sent.',
-                'data': {
+        if not user.is_verified or not user.is_registered:
+            return self.create_response(
+                False, 'Account not fully verified or registered.',
+                data={
                     'email': user.email,
-                    'is_verified': user.is_verified
-                }
-            }, status=status.HTTP_403_FORBIDDEN)
+                    'is_verified': user.is_verified,
+                    'is_registered': user.is_registered
+                },
+                status_code=status.HTTP_403_FORBIDDEN
+            )
 
         refresh = RefreshToken.for_user(user)
-        return Response({
-            'success': True,
-            'message': 'Login successful.',
-            'data': {
+        return self.create_response(
+            True, 'Login successful.',
+            data={
                 'refresh': str(refresh),
                 'access': str(refresh.access_token),
                 'email': user.email,
-                'is_verified': user.is_verified
+                'is_verified': user.is_verified,
+                'is_registered': user.is_registered
             }
-        }, status=status.HTTP_200_OK)
+        )
 
-
-class RegisterView(APIView):
-    permission_classes = [AllowAny]
-    
+class RegisterView(BaseAuthView):
     @extend_schema(
         request=UserRegistrationSerializer,
         responses={201: AuthenticationResponseSerializer}
     )
     def post(self, request):
-        email = request.data.get('email')
-        username = request.data.get('username')
-        
-        # Check if user exists
-        existing_user = User.objects.filter(email=email).first()
-        if existing_user:
-            if existing_user.is_verified:
-                return Response({
-                    'success': False,
-                    'message': 'Account already exists and is verified. Please login instead.',
-                    'data': {
-                        'email': existing_user.email,
-                        'is_verified': existing_user.is_verified
-                    }
-                }, status=status.HTTP_400_BAD_REQUEST)
-            else:
-                # Send new OTP only for unverified users
-                OTPService.create_and_send_otp(existing_user, 'registration')
-                return Response({
-                    'success': True,
-                    'message': 'Account exists but is not verified. New verification code sent.',
-                    'data': {
-                        'email': existing_user.email,
-                        'is_verified': existing_user.is_verified
-                    }
-                }, status=status.HTTP_201_CREATED)
-
-        # For new user registration
         serializer = UserRegistrationSerializer(data=request.data)
-        if not serializer.is_valid():
-            return Response({
-                'success': False,
-                'message': 'Registration failed.',
-                'errors': serializer.errors
-            }, status=status.HTTP_400_BAD_REQUEST)
-
+        
         try:
+            serializer.is_valid(raise_exception=True)
             user = serializer.save()
             OTPService.create_and_send_otp(user, 'registration')
             
-            return Response({
-                'success': True,
-                'message': 'Registration successful. Please verify your email.',
-                'data': {
+            return self.create_response(
+                True, 'Registration successful. Please check your email for OTP verification.',
+                data={
                     'email': user.email,
-                    'is_verified': user.is_verified
-                }
-            }, status=status.HTTP_201_CREATED)
+                    'is_verified': user.is_verified,
+                    'is_registered': user.is_registered
+                },
+                status_code=status.HTTP_201_CREATED
+            )
+            
+        except serializers.ValidationError as e:
+            return self.create_response(
+                False, 'Validation failed',
+                errors=e.detail if hasattr(e, 'detail') else str(e),
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
+            
         except Exception as e:
-            return Response({
-                'success': False,
-                'message': 'Registration failed.',
-                'errors': str(e)
-            }, status=status.HTTP_400_BAD_REQUEST)
+            import traceback
+            print(f"Registration error: {str(e)}")
+            print(traceback.format_exc())
+            
+            return self.create_response(
+                False, 'Registration failed',
+                errors={'detail': str(e)},
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
 
-
-class VerifyOTPView(APIView):
-    permission_classes = [AllowAny]
-    
+class VerifyOTPView(BaseAuthView):
     @extend_schema(
         request=OTPVerificationSerializer,
         responses={200: AuthenticationResponseSerializer}
@@ -128,11 +141,11 @@ class VerifyOTPView(APIView):
     def post(self, request):
         serializer = OTPVerificationSerializer(data=request.data)
         if not serializer.is_valid():
-            return Response({
-                'success': False,
-                'message': 'Invalid data.',
-                'errors': serializer.errors
-            }, status=status.HTTP_400_BAD_REQUEST)
+            return self.create_response(
+                False, 'Invalid data.',
+                errors=serializer.errors,
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
 
         try:
             user = User.objects.get(email=serializer.validated_data['email'])
@@ -143,117 +156,104 @@ class VerifyOTPView(APIView):
             )
 
             if not is_valid:
-                return Response({
-                    'success': False,
-                    'message': message
-                }, status=status.HTTP_400_BAD_REQUEST)
+                return self.create_response(
+                    False, message,
+                    status_code=status.HTTP_400_BAD_REQUEST
+                )
 
             if serializer.validated_data['verification_type'] == 'registration':
                 user.is_verified = True
+                user.is_registered = True
                 user.save()
                 refresh = RefreshToken.for_user(user)
-                return Response({
-                    'success': True,
-                    'message': 'Email verified successfully.',
-                    'data': {
+                return self.create_response(
+                    True, 'Email verified successfully.',
+                    data={
                         'refresh': str(refresh),
-                        'access': str(refresh.access_token)
+                        'access': str(refresh.access_token),
+                        'email': user.email,
+                        'is_verified': user.is_verified,
+                        'is_registered': user.is_registered
                     }
-                }, status=status.HTTP_200_OK)
+                )
             
-            return Response({
-                'success': True,
-                'message': message
-            }, status=status.HTTP_200_OK)
+            return self.create_response(True, message)
 
         except User.DoesNotExist:
-            return Response({
-                'success': False,
-                'message': 'User not found.'
-            }, status=status.HTTP_404_NOT_FOUND)
+            return self.create_response(
+                False, 'User not found.',
+                status_code=status.HTTP_404_NOT_FOUND
+            )
 
-class ForgotPasswordView(APIView):
-    permission_classes = [AllowAny]
-
-    @extend_schema(
-        responses={200: AuthenticationResponseSerializer}
-    )
+class ForgotPasswordView(BaseAuthView):
+    @extend_schema(responses={200: AuthenticationResponseSerializer})
     def post(self, request):
         email = request.data.get('email')
         try:
             user = User.objects.get(email=email)
             if not user.is_verified:
-                return Response({
-                    'success': False,
-                    'message': 'Please verify your email first.'
-                }, status=status.HTTP_400_BAD_REQUEST)
+                return self.create_response(
+                    False, 'Please verify your email first.',
+                    status_code=status.HTTP_400_BAD_REQUEST
+                )
                 
             OTPService.create_and_send_otp(user, 'password_reset')
-            return Response({
-                'success': True,
-                'message': 'Password reset OTP has been sent to your email.',
-                'data': {'email': user.email}
-            }, status=status.HTTP_200_OK)
+            return self.create_response(
+                True, 'Password reset OTP has been sent to your email.',
+                data={'email': user.email}
+            )
             
         except User.DoesNotExist:
-            return Response({
-                'success': False,
-                'message': 'No user found with this email.'
-            }, status=status.HTTP_404_NOT_FOUND)
+            return self.create_response(
+                False, 'No user found with this email.',
+                status_code=status.HTTP_404_NOT_FOUND
+            )
 
-class ResetPasswordView(APIView):
-    permission_classes = [AllowAny]
-    
+class ResetPasswordView(BaseAuthView):
     @extend_schema(
         request=PasswordResetSerializer,
         responses={200: AuthenticationResponseSerializer}
     )
     def post(self, request):
+        """Handle password reset."""
         serializer = PasswordResetSerializer(data=request.data)
         if not serializer.is_valid():
-            return Response({
-                'success': False,
-                'message': 'Invalid data.',
-                'errors': serializer.errors
-            }, status=status.HTTP_400_BAD_REQUEST)
+            return self.create_response(
+                False, 'Invalid data.',
+                errors=serializer.errors,
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
 
         try:
             user = User.objects.get(email=serializer.validated_data['email'])
-            # Check for verified OTP first
             latest_verified_otp = user.otpverification_set.filter(
                 verification_type='password_reset',
                 is_verified=True
             ).latest('verified_at')
             
             if not latest_verified_otp:
-                return Response({
-                    'success': False,
-                    'message': 'Please verify your OTP first.'
-                }, status=status.HTTP_400_BAD_REQUEST)
+                return self.create_response(
+                    False, 'Please verify your OTP first.',
+                    status_code=status.HTTP_400_BAD_REQUEST
+                )
 
             user.set_password(serializer.validated_data['new_password'])
             user.save()
-            
-            # Invalidate the used OTP
             latest_verified_otp.delete()
             
-            return Response({
-                'success': True,
-                'message': 'Password reset successful.'
-            }, status=status.HTTP_200_OK)
+            return self.create_response(True, 'Password reset successful.')
             
         except User.DoesNotExist:
-            return Response({
-                'success': False,
-                'message': 'User not found.'
-            }, status=status.HTTP_404_NOT_FOUND)
+            return self.create_response(
+                False, 'User not found.',
+                status_code=status.HTTP_404_NOT_FOUND
+            )
         except Exception as e:
-            return Response({
-                'success': False,
-                'message': str(e)
-            }, status=status.HTTP_400_BAD_REQUEST)
-            
-            
+            return self.create_response(
+                False, str(e),
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
+         
             
 class GoogleLoginView(APIView):
     permission_classes = [AllowAny]

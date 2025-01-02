@@ -8,6 +8,9 @@ from rest_framework_simplejwt.views import (
 app_name = 'authentication'
 
 urlpatterns = [
+    # New endpoint for checking email registration status
+    path('check-email/', CheckEmailView.as_view(), name='check-email'),
+    
     # Authentication endpoints
     path('register/', RegisterView.as_view(), name='register'),
     path('login/', LoginView.as_view(), name='login'),
@@ -21,6 +24,6 @@ urlpatterns = [
     path('token/refresh/', TokenRefreshView.as_view(), name='token-refresh'),
     path('token/verify/', TokenVerifyView.as_view(), name='token-verify'),
     
+    # OAuth endpoints
     path('google/', GoogleLoginView.as_view(), name='google-login'),
-
 ]
