@@ -48,7 +48,6 @@ INSTALLED_APPS = [
     'django.contrib.gis',
     'accounts',
     'authentication',
-    'drf_yasg',
     'drf_spectacular',
 ]
 
@@ -179,11 +178,7 @@ SPECTACULAR_SETTINGS = {
     'TITLE': 'Authentication API',
     'DESCRIPTION': 'API endpoints for user authentication, registration, and password management',
     'VERSION': '1.0.0',
-    'SERVE_INCLUDE_SCHEMA': True,
-    
-    # Schema customizations
-    'COMPONENT_SPLIT_REQUEST': True,
-    'SCHEMA_PATH_PREFIX': '/api/v1/',
+    'SERVE_INCLUDE_SCHEMA': False,
 }
 
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = config('GOOGLE_OAUTH2_CLIENT_ID')
