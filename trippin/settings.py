@@ -213,6 +213,14 @@ SOCIAL_AUTH_GOOGLE_OAUTH2_EXTRA_DATA = [
     'last_name',
 ]
 
+SOCIAL_AUTH_GOOGLE_OAUTH2_AUTH_EXTRA_ARGUMENTS = {
+    'access_type': 'offline',
+    'prompt': 'consent'
+}
+
+SOCIAL_AUTH_GOOGLE_OAUTH2_ACCESS_TOKEN_METHOD = 'POST'
+SOCIAL_AUTH_GOOGLE_OAUTH2_ACCESS_TOKEN_URL = 'https://oauth2.googleapis.com/token'
+
 SOCIAL_AUTH_URL_NAMESPACE = 'social'
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = '/'
