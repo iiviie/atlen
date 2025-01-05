@@ -121,9 +121,3 @@ class PasswordResetSerializer(serializers.Serializer):
                 'lowercase, numbers and special characters.'
             )
         return value
-
-class GoogleAuthSerializer(serializers.Serializer):
-    auth_token = serializers.CharField()
-
-    class Meta:
-        fields = ('auth_token',)

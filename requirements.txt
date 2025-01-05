@@ -18,7 +18,7 @@ drf-yasg
 drf-spectacular
 google-auth
 google-auth-oauthlib
-
+drf_social_oauth2
 
 
 

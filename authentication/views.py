@@ -6,10 +6,11 @@ from django.contrib.auth import authenticate, get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
 from drf_spectacular.utils import extend_schema
 from rest_framework import serializers
+from social_django.utils import psa
 import requests
 from .serializers import (
     AuthenticationResponseSerializer, UserRegistrationSerializer,
-    OTPVerificationSerializer, PasswordResetSerializer, GoogleAuthSerializer
+    OTPVerificationSerializer, PasswordResetSerializer, 
 )
 from .services import OTPService
 
@@ -253,83 +254,5 @@ class ResetPasswordView(BaseAuthView):
                 False, str(e),
                 status_code=status.HTTP_400_BAD_REQUEST
             )
-         
-            
-class GoogleLoginView(APIView):
-    permission_classes = [AllowAny]
-    
-    @extend_schema(
-        request=GoogleAuthSerializer,
-        responses={200: AuthenticationResponseSerializer}
-    )
-    def post(self, request):
-        token = request.data.get('auth_token')
-        if not token:
-            return Response({
-                'success': False,
-                'message': 'Token is required'
-            }, status=status.HTTP_400_BAD_REQUEST)
-            
-        try:
-            # Google OAuth verification
-            userinfo_url = 'https://www.googleapis.com/oauth2/v3/userinfo'
-            google_response = requests.get(
-                userinfo_url,
-                headers={'Authorization': f'Bearer {token}'}
-            )
-            
-            if not google_response.ok:
-                return Response({
-                    'success': False,
-                    'message': 'Failed to verify token with Google',
-                    'errors': google_response.text
-                }, status=status.HTTP_400_BAD_REQUEST)
-            
-            userinfo = google_response.json()
-            email = userinfo.get('email')
-            
-            if not email:
-                return Response({
-                    'success': False,
-                    'message': 'Email not found in Google response'
-                }, status=status.HTTP_400_BAD_REQUEST)
-            
-            # Get or create user
-            user = User.objects.filter(email=email).first()
-            
-            if not user:
-                # Create new user
-                username = email.split('@')[0]
-                user = User.objects.create(
-                    email=email,
-                    username=username,
-                    first_name=userinfo.get('given_name', ''),
-                    last_name=userinfo.get('family_name', ''),
-                    is_verified=True  # Google-authenticated users are verified
-                )
-            elif not user.is_verified:
-                # Update existing unverified user
-                user.is_verified = True
-                user.save()
-            
-            # Generate JWT tokens
-            refresh = RefreshToken.for_user(user)
-            
-            return Response({
-                'success': True,
-                'message': 'Google login successful',
-                'data': {
-                    'refresh': str(refresh),
-                    'access': str(refresh.access_token),
-                    'email': user.email,
-                    'is_verified': user.is_verified,
-                    'user_info': userinfo  # For testing purposes
-                }
-            }, status=status.HTTP_200_OK)
-            
-        except Exception as e:
-            return Response({
-                'success': False,
-                'message': f'Authentication failed: {str(e)}',
-                'error_details': str(e)  # For debugging
-            }, status=status.HTTP_400_BAD_REQUEST)           
+                     
+

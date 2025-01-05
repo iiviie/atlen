@@ -12,6 +12,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path("api/auth/", include("authentication.urls")),
     path('', include('social_django.urls', namespace='social')),
+    path('auth/', include('drf_social_oauth2.urls', namespace='drf')),
 
     # drf-spectacular URLs
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
