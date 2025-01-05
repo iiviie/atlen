@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from pathlib import Path
 from decouple import config
 import os
+import environ
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -104,9 +105,13 @@ WSGI_APPLICATION = 'trippin.wsgi.application'
 #         'PORT': config('DB_PORT', cast=int),
 #     }
 # }
+env = environ.Env()
 
 DATABASES = {
-    'default': config('DATABASE_URL_RENDER')
+    'default': env.db(
+        'DATABASE_URL_RENDER',  
+        default='postgis://user:password@localhost:5432/dbname'  
+    )
 }
 
 
