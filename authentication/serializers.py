@@ -104,6 +104,7 @@ class PasswordResetSerializer(serializers.Serializer):
     email = serializers.EmailField()
     new_password = serializers.CharField(min_length=8, write_only=True)
     confirm_password = serializers.CharField(min_length=8, write_only=True)
+    reset_token = serializers.CharField(required=True)  # New field
 
     def validate(self, data):
         if data.get('new_password') != data.get('confirm_password'):

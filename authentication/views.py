@@ -162,6 +162,12 @@ class VerifyOTPView(BaseAuthView):
                     status_code=status.HTTP_400_BAD_REQUEST
                 )
 
+            # Get the latest verified OTP record
+            otp_record = user.otpverification_set.filter(
+                verification_type=serializer.validated_data['verification_type'],
+                is_verified=True
+            ).latest('verified_at')
+
             if serializer.validated_data['verification_type'] == 'registration':
                 user.is_verified = True
                 user.is_registered = True
@@ -177,6 +183,14 @@ class VerifyOTPView(BaseAuthView):
                         'is_registered': user.is_registered
                     }
                 )
+            elif serializer.validated_data['verification_type'] == 'password_reset':
+                return self.create_response(
+                    True, 'OTP verified successfully. Use the reset token to change your password.',
+                    data={
+                        'reset_token': otp_record.reset_token,
+                        'email': user.email
+                    }
+                )
             
             return self.create_response(True, message)
 
@@ -185,6 +199,8 @@ class VerifyOTPView(BaseAuthView):
                 False, 'User not found.',
                 status_code=status.HTTP_404_NOT_FOUND
             )
+
+
 
 class ForgotPasswordView(BaseAuthView):
     @extend_schema(responses={200: AuthenticationResponseSerializer})
@@ -229,17 +245,26 @@ class ResetPasswordView(BaseAuthView):
             user = User.objects.get(email=serializer.validated_data['email'])
             latest_verified_otp = user.otpverification_set.filter(
                 verification_type='password_reset',
-                is_verified=True
+                is_verified=True,
+                reset_token=serializer.validated_data['reset_token']
             ).latest('verified_at')
             
             if not latest_verified_otp:
                 return self.create_response(
-                    False, 'Please verify your OTP first.',
+                    False, 'Invalid reset token.',
+                    status_code=status.HTTP_400_BAD_REQUEST
+                )
+
+            if not latest_verified_otp.is_reset_token_valid():
+                return self.create_response(
+                    False, 'Reset token has expired.',
                     status_code=status.HTTP_400_BAD_REQUEST
                 )
 
             user.set_password(serializer.validated_data['new_password'])
             user.save()
+            
+            # Invalidate the used reset token
             latest_verified_otp.delete()
             
             return self.create_response(True, 'Password reset successful.')
