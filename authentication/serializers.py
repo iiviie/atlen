@@ -51,10 +51,14 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
                 'confirm_password': 'Passwords do not match.'
             })
         return attrs
+    
+    def validate_email(self, value):
+        return value.lower()
 
     def create(self, validated_data):
         validated_data.pop('confirm_password', None)
         email = validated_data.get('email')
+        validated_data['email'] = validated_data['email'].lower()
         password = validated_data.get('password')
 
         try:
