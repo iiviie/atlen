@@ -11,6 +11,7 @@ from drf_spectacular.views import (
 urlpatterns = [
     path('admin/', admin.site.urls),
     path("api/auth/", include("authentication.urls")),
+    path("api/accounts/", include("accounts.urls")),
     path('', include('social_django.urls', namespace='social')),
     path('auth/', include('drf_social_oauth2.urls', namespace='drf')),
 
