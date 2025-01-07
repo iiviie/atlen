@@ -13,6 +13,8 @@ from .serializers import (
     OTPVerificationSerializer, PasswordResetSerializer, 
 )
 from .services import OTPService
+from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
+from rest_framework_simplejwt.tokens import RefreshToken
 
 User = get_user_model()
 
@@ -33,7 +35,7 @@ class BaseAuthView(APIView):
 class CheckEmailView(BaseAuthView):
     @extend_schema(responses={200: AuthenticationResponseSerializer})
     def post(self, request):
-        email = request.data.get('email')
+        email = request.data.get('email').lower()
         if not email:
             return self.create_response(
                 False, 'Email is required.', 
@@ -59,7 +61,7 @@ class CheckEmailView(BaseAuthView):
 class LoginView(BaseAuthView):
     @extend_schema(responses={200: AuthenticationResponseSerializer})
     def post(self, request):
-        email = request.data.get('email')
+        email = request.data.get('email').lower()
         password = request.data.get('password')
         
         user = authenticate(request, email=email, password=password)
@@ -141,6 +143,9 @@ class VerifyOTPView(BaseAuthView):
     )
     def post(self, request):
         serializer = OTPVerificationSerializer(data=request.data)
+        if 'email' in request.data:
+            request.data['email'] = request.data['email'].lower()
+
         if not serializer.is_valid():
             return self.create_response(
                 False, 'Invalid data.',
@@ -205,7 +210,7 @@ class VerifyOTPView(BaseAuthView):
 class ForgotPasswordView(BaseAuthView):
     @extend_schema(responses={200: AuthenticationResponseSerializer})
     def post(self, request):
-        email = request.data.get('email')
+        email = request.data.get('email').lower()
         try:
             user = User.objects.get(email=email)
             if not user.is_verified:
@@ -226,6 +231,7 @@ class ForgotPasswordView(BaseAuthView):
                 status_code=status.HTTP_404_NOT_FOUND
             )
 
+
 class ResetPasswordView(BaseAuthView):
     @extend_schema(
         request=PasswordResetSerializer,
@@ -242,7 +248,7 @@ class ResetPasswordView(BaseAuthView):
             )
 
         try:
-            user = User.objects.get(email=serializer.validated_data['email'])
+            user = User.objects.get(email=serializer.validated_data['email'].lower())  # Convert email to lowercase
             latest_verified_otp = user.otpverification_set.filter(
                 verification_type='password_reset',
                 is_verified=True,
@@ -261,13 +267,18 @@ class ResetPasswordView(BaseAuthView):
                     status_code=status.HTTP_400_BAD_REQUEST
                 )
 
+            # Blacklist all existing tokens for the user
+            tokens = OutstandingToken.objects.filter(user=user)
+            for token in tokens:
+                BlacklistedToken.objects.get_or_create(token=token)
+
             user.set_password(serializer.validated_data['new_password'])
             user.save()
             
             # Invalidate the used reset token
             latest_verified_otp.delete()
             
-            return self.create_response(True, 'Password reset successful.')
+            return self.create_response(True, 'Password reset successful. All devices have been logged out.')
             
         except User.DoesNotExist:
             return self.create_response(
@@ -278,6 +289,5 @@ class ResetPasswordView(BaseAuthView):
             return self.create_response(
                 False, str(e),
                 status_code=status.HTTP_400_BAD_REQUEST
-            )
-                     
+            )                     
 
