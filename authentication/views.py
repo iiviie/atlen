@@ -46,7 +46,7 @@ class CheckEmailView(BaseAuthView):
         if not user:
             return self.create_response(
                 True, 'Email not registered.',
-                data={'is_registered': False, 'is_verified': False}
+                data={'email':email,'is_registered': False, 'is_verified': False}
             )
 
         return self.create_response(
