@@ -1,0 +1,36 @@
+python-slugify==8.0.4  
+Pillow==11.1.0  
+argon2-cffi==23.1.0  
+whitenoise==6.8.2 
+redis==5.2.1  
+hiredis==3.1.0  
+celery==5.4.0  
+django-celery-beat==2.7.0  
+flower==2.0.1 
+uvicorn[standard]==0.34.0  
+uvicorn-worker==0.3.0  
+python-decouple
+# Django
+# ------------------------------------------------------------------------------
+django==5.0.10 
+django-environ==0.11.2  
+django-model-utils==5.0.0  
+django-allauth[mfa]==65.3.1  
+django-crispy-forms==2.3  
+crispy-bootstrap5==2024.10  
+django-redis==5.4.0  
+# Django REST Framework
+djangorestframework==3.15.2  
+django-cors-headers==4.6.0  
+# DRF-spectacular for api documentation
+drf-spectacular==0.28.0
+
+google-auth
+google-auth-oauthlib
+drf_social_oauth2
+requests
+Pillow
+djangorestframework-simplejwt
+social-auth-app-django
+sqlparse
+psycopg2-binary
