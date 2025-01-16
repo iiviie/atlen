@@ -34,3 +34,4 @@ djangorestframework-simplejwt
 social-auth-app-django
 sqlparse
 psycopg2-binary
+drf-nested-routers

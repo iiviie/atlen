@@ -4,6 +4,8 @@
 import ssl
 from pathlib import Path
 from decouple import config
+from django.core.exceptions import ImproperlyConfigured
+from datetime import timedelta
 
 import environ
 
@@ -34,7 +36,13 @@ SITE_ID = 1
 USE_I18N = True
 USE_TZ = True
 
-DATABASES = {"default": env.db("DATABASE_URL")}
+DATABASES = {
+    "default": env.db(
+        "DATABASE_URL",
+        default="postgis:///atlen",
+        engine="django.contrib.gis.db.backends.postgis",
+    ),
+}
 
 DATABASES["default"]["ATOMIC_REQUESTS"] = True
 
@@ -50,6 +58,7 @@ DJANGO_APPS = [
     "django.contrib.sessions",
     "django.contrib.sites",
     "django.contrib.messages",
+    "django.contrib.gis",
     "django.contrib.staticfiles",
     # "django.contrib.humanize", # Handy template tags
     "django.forms",
@@ -72,6 +81,7 @@ THIRD_PARTY_APPS = [
 LOCAL_APPS = [
     "authentication",
     "accounts",
+    "trip",
     # Your stuff: custom apps go here
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
@@ -316,11 +326,15 @@ CORS_URLS_REGEX = r"^/api/.*$"
 # By Default swagger ui is available only to admin user(s). You can change permission classes to change that
 # See more configuration options at https://drf-spectacular.readthedocs.io/en/latest/settings.html#settings
 SPECTACULAR_SETTINGS = {
-    "TITLE": "atlen API",
-    "DESCRIPTION": "Documentation of API endpoints of atlen",
+    "TITLE": "Atlen API",
+    "DESCRIPTION": "API documentation for Atlen",
     "VERSION": "1.0.0",
-    "SERVE_PERMISSIONS": ["rest_framework.permissions.IsAdminUser"],
-    "SCHEMA_PATH_PREFIX": "/api/",
+    "SERVE_INCLUDE_SCHEMA": False,
+    # Other settings you might have...
+    
+    # Add these lines to allow unauthenticated access to docs
+    "SERVE_AUTHENTICATION": None,
+    "SERVE_PERMISSIONS": ["rest_framework.permissions.AllowAny"],
 }
 # Your stuff...
 # ------------------------------------------------------------------------------
@@ -359,3 +373,19 @@ SOCIAL_AUTH_GOOGLE_OAUTH2_ACCESS_TOKEN_METHOD = 'POST'
 SOCIAL_AUTH_GOOGLE_OAUTH2_ACCESS_TOKEN_URL = 'https://oauth2.googleapis.com/token'
 
 
+SECRET_KEY = env(
+    "DJANGO_SECRET_KEY",
+    default="django-insecure-key-for-dev",
+)
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),  
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),  
+    'ROTATE_REFRESH_TOKENS': False,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'UPDATE_LAST_LOGIN': False,
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,
+    'VERIFYING_KEY': None,
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
+}
