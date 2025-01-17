@@ -15,6 +15,10 @@ from .serializers import (
 from .services import OTPService
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
 from rest_framework_simplejwt.tokens import RefreshToken
+from .pipeline import verify_google_token
+from django.conf import settings
+from decouple import config
+
 
 User = get_user_model()
 
@@ -291,3 +295,53 @@ class ResetPasswordView(BaseAuthView):
                 status_code=status.HTTP_400_BAD_REQUEST
             )                     
 
+class VerifyAndroidTokenView(APIView):
+    def post(self, request):
+        id_token = request.data.get('id_token')
+        access_token = request.data.get('access_token')
+        is_test = request.data.get('is_test', False)
+        
+        if not (id_token or access_token):
+            return Response({
+                'success': False,
+                'error': 'No token provided'
+            }, status=400)
+            
+        try:
+            # If access_token is provided, use it for verification
+            if access_token:
+                userinfo = verify_google_token(access_token, is_id_token=False)
+            else:
+                userinfo = verify_google_token(id_token, is_id_token=True)
+            
+            # Create or get user
+            user = User.objects.filter(email=userinfo['email']).first()
+            if not user:
+                user = User.objects.create_user(
+                    email=userinfo['email'],
+                    first_name=userinfo.get('given_name', ''),
+                    last_name=userinfo.get('family_name', ''),
+                    is_verified=True,
+                    is_registered=True,
+                    password=None
+                )
+            
+            # Generate JWT tokens
+            refresh = RefreshToken.for_user(user)
+            
+            return Response({
+                'success': True,
+                'data': {
+                    'userinfo': userinfo,
+                    'tokens': {
+                        'refresh': str(refresh),
+                        'access': str(refresh.access_token)
+                    }
+                }
+            })
+            
+        except ValueError as e:
+            return Response({
+                'success': False,
+                'error': str(e)
+            }, status=400)

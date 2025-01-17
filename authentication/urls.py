@@ -24,4 +24,6 @@ urlpatterns = [
     # JWT token management endpoints
     path('token/refresh/', TokenRefreshView.as_view(), name='token-refresh'),
     path('token/verify/', TokenVerifyView.as_view(), name='token-verify'),
+    
+    path('verify-android-token/', VerifyAndroidTokenView.as_view(), name='verify-android-token'),
 ]

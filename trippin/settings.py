@@ -232,7 +232,9 @@ SOCIAL_AUTH_GOOGLE_OAUTH2_EXTRA_DATA = [
 
 SOCIAL_AUTH_GOOGLE_OAUTH2_AUTH_EXTRA_ARGUMENTS = {
     'access_type': 'offline',
-    'prompt': 'consent'
+    'prompt': 'consent',
+    'include_granted_scopes': 'true',
+    'response_type': 'code'
 }
 
 SOCIAL_AUTH_GOOGLE_OAUTH2_ACCESS_TOKEN_METHOD = 'POST'
@@ -242,3 +244,10 @@ SOCIAL_AUTH_URL_NAMESPACE = 'social'
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = '/'
 SOCIAL_AUTH_LOGIN_REDIRECT_URL = '/'
+
+GOOGLE_OAUTH2_ANDROID_CLIENT_ID = '181001656008-laokdnq18gstb54t1ts7hdnbu23l55nd.apps.googleusercontent.com'
+
+GOOGLE_OAUTH2_ANDROID_SCOPES = [
+    'https://www.googleapis.com/auth/userinfo.email',
+    'https://www.googleapis.com/auth/userinfo.profile',
+]
