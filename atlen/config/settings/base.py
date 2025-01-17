@@ -82,6 +82,7 @@ LOCAL_APPS = [
     "authentication",
     "accounts",
     "trip",
+    "flights"
     # Your stuff: custom apps go here
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
@@ -389,3 +390,6 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
     'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
 }
+
+# RapidAPI Settings
+RAPIDAPI_KEY = env("RAPIDAPI_KEY", default="your-rapidapi-key-here")
