@@ -18,9 +18,9 @@ class CustomUserChangeForm(UserChangeForm):
 class CustomUserAdmin(UserAdmin):
     form = CustomUserChangeForm
     add_form = CustomUserCreationForm
-    list_display = ('email', 'is_verified', 'is_registered', 'date_joined', 'is_active', 'is_staff')
+    list_display = ('id', 'email', 'is_verified', 'is_registered', 'date_joined', 'is_active', 'is_staff')
     list_filter = ('is_verified', 'is_registered', 'is_active', 'is_staff', 'date_joined')
-    search_fields = ('email', 'first_name', 'last_name')
+    search_fields = ('email', 'first_name', 'last_name', 'id')
     ordering = ('-date_joined',)
     actions = ['delete_selected'] 
     

@@ -1,9 +1,9 @@
 from django.contrib import admin
-from django.contrib.gis.admin import OSMGeoAdmin
+from django.contrib.gis.admin import GISModelAdmin
 from .models import Location, Trip, ChecklistItem, Itinerary, ItineraryItem
 
 @admin.register(Location)
-class LocationAdmin(OSMGeoAdmin):
+class LocationAdmin(GISModelAdmin):
     list_display = ('name', 'city', 'country', 'created_at')
     list_filter = ('country', 'city')
     search_fields = ('name', 'address', 'city', 'country')

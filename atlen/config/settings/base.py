@@ -83,6 +83,7 @@ LOCAL_APPS = [
     "accounts",
     "trip",
     "flights"
+    "group_travel"
     # Your stuff: custom apps go here
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
