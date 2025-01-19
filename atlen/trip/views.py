@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404
 from django.db.models import Count, Q
 from django.contrib.auth import get_user_model
 from trip.models import Trip, ChecklistItem, Itinerary, ItineraryItem
+from group_travel.models import GroupChat
 from trip.serializers import (
     TripListSerializer, TripDetailSerializer, ChecklistItemSerializer,
     ItinerarySerializer, ItineraryItemSerializer, TripStatsSerializer,
@@ -32,7 +33,8 @@ class TripViewSet(viewsets.ModelViewSet):
         return TripDetailSerializer
 
     def perform_create(self, serializer):
-        serializer.save(creator=self.request.user)
+        trip = serializer.save(creator=self.request.user)
+        GroupChat.objects.create(trip=trip)
 
 class CompanionViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated, IsTripParticipant]

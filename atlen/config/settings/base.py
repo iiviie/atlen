@@ -64,6 +64,7 @@ DJANGO_APPS = [
     "django.forms",
 ]
 THIRD_PARTY_APPS = [
+    "channels",
     "rest_framework",
     "corsheaders",
     "oauth2_provider",
@@ -76,14 +77,14 @@ THIRD_PARTY_APPS = [
     "crispy_bootstrap5",
     "django_celery_beat",
     "rest_framework.authtoken",
+    "group_travel",
 ]
 
 LOCAL_APPS = [
     "authentication",
     "accounts",
     "trip",
-    "flights"
-    "group_travel"
+    "flights",  
     # Your stuff: custom apps go here
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
@@ -380,7 +381,7 @@ SECRET_KEY = env(
     default="django-insecure-key-for-dev",
 )
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),  
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=10),  
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),  
     'ROTATE_REFRESH_TOKENS': False,
     'BLACKLIST_AFTER_ROTATION': True,
@@ -392,5 +393,15 @@ SIMPLE_JWT = {
     'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
 }
 
-# RapidAPI Settings
 RAPIDAPI_KEY = env("RAPIDAPI_KEY", default="your-rapidapi-key-here")
+
+ASGI_APPLICATION = "config.asgi.application"
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [env.str("REDIS_URL", "redis://redis:6379/0")],
+        },
+    },
+}

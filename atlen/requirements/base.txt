@@ -35,3 +35,8 @@ social-auth-app-django
 sqlparse
 psycopg2-binary
 drf-nested-routers
+channels
+redis
+channels-redis
+hiredis
+daphne

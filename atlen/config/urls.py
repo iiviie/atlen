@@ -40,6 +40,7 @@ urlpatterns += [
     # API base url
     path("api/", include("trip.urls", namespace="trip")),
     path("api/", include("flights.urls", namespace="flights")),
+    path("api/", include("group_travel.urls", namespace="group_travel")),
     # DRF auth token
     path("api/auth-token/", obtain_auth_token),
     path("api/schema/", SpectacularAPIView.as_view(), name="api-schema"),
