@@ -325,17 +325,12 @@ REST_FRAMEWORK = {
 CORS_ALLOW_ALL_ORIGINS = True  # Only use this for development
 CORS_ALLOW_CREDENTIALS = True
 CORS_URLS_REGEX = r"^/api/.*$"
-
-# By Default swagger ui is available only to admin user(s). You can change permission classes to change that
-# See more configuration options at https://drf-spectacular.readthedocs.io/en/latest/settings.html#settings
+    
 SPECTACULAR_SETTINGS = {
     "TITLE": "Atlen API",
     "DESCRIPTION": "API documentation for Atlen",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
-    # Other settings you might have...
-    
-    # Add these lines to allow unauthenticated access to docs
     "SERVE_AUTHENTICATION": None,
     "SERVE_PERMISSIONS": ["rest_framework.permissions.AllowAny"],
 }
@@ -405,3 +400,8 @@ CHANNEL_LAYERS = {
         },
     },
 }
+
+GOOGLE_PLACES_API_KEY = config('GOOGLE_PLACES_API_KEY')
+GOOGLE_PLACES_NEARBY_URL = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json'
+GOOGLE_PLACES_DETAILS_URL = 'https://maps.googleapis.com/maps/api/place/details/json'
+GOOGLE_PLACES_PHOTOS_URL = 'https://maps.googleapis.com/maps/api/place/photo'
