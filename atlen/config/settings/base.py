@@ -110,7 +110,7 @@ AUTH_USER_MODEL = "accounts.User"
 LOGIN_REDIRECT_URL = '/'
 # https://docs.djangoproject.com/en/dev/ref/settings/#login-url
 LOGIN_URL = 'login'
-SOCIAL_AUTH_LOGIN_REDIRECT_URL = '/'
+SOCIAL_AUTH_LOGIN_REDIRECT_URL = 'drf'
 
 # PASSWORDS
 # ------------------------------------------------------------------------------
@@ -364,7 +364,9 @@ SOCIAL_AUTH_GOOGLE_OAUTH2_EXTRA_DATA = [
 
 SOCIAL_AUTH_GOOGLE_OAUTH2_AUTH_EXTRA_ARGUMENTS = {
     'access_type': 'offline',
-    'prompt': 'consent'
+    'prompt': 'consent',
+    'include_granted_scopes': 'true',
+    'response_type': 'code'
 }
 
 SOCIAL_AUTH_GOOGLE_OAUTH2_ACCESS_TOKEN_METHOD = 'POST'
@@ -405,3 +407,10 @@ GOOGLE_PLACES_API_KEY = config('GOOGLE_PLACES_API_KEY')
 GOOGLE_PLACES_NEARBY_URL = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json'
 GOOGLE_PLACES_DETAILS_URL = 'https://maps.googleapis.com/maps/api/place/details/json'
 GOOGLE_PLACES_PHOTOS_URL = 'https://maps.googleapis.com/maps/api/place/photo'
+
+GOOGLE_OAUTH2_ANDROID_CLIENT_ID = config('GOOGLE_OAUTH2_ANDROID_CLIENT_ID')
+
+GOOGLE_OAUTH2_ANDROID_SCOPES = [
+    'https://www.googleapis.com/auth/userinfo.email',
+    'https://www.googleapis.com/auth/userinfo.profile',
+]

@@ -13,10 +13,10 @@ from rest_framework.authtoken.views import obtain_auth_token
 urlpatterns = [
     
     path('admin/', admin.site.urls),
-    path("api/auth/", include("authentication.urls")),
-    path("api/accounts/", include("accounts.urls")),
+    path('api/auth/', include("authentication.urls")),
+    path('api/accounts/', include("accounts.urls")),
     path('', include('social_django.urls', namespace='social')),
-    path('auth/', include('drf_social_oauth2.urls', namespace='drf')),
+    path('auth/', include('drf_social_oauth2.urls', namespace='drf-social')),
 
     # drf-spectacular URLs
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
