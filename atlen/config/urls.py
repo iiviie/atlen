@@ -49,6 +49,7 @@ urlpatterns += [
         SpectacularSwaggerView.as_view(url_name="api-schema"),
         name="api-docs",
     ),
+    path("api/", include("bucket_list.urls", namespace="bucket_list")),
 ]
 
 if settings.DEBUG:
