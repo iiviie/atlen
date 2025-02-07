@@ -13,62 +13,68 @@ class GooglePlacesService:
         self.details_url = settings.GOOGLE_PLACES_DETAILS_URL
         self.photos_url = settings.GOOGLE_PLACES_PHOTOS_URL
 
-    def search_nearby_places(
-        self,
-        location: Point,
-        radius: int = 5000,
-        type: Optional[str] = None,
-        keyword: Optional[str] = None
-    ) -> Optional[List[Dict]]:
+
+    def search_nearby_places(self, latitude: float, longitude: float, radius: int = 5000, types: Optional[List[str]] = None) -> Optional[List[Dict]]:
         """Search for places near a location"""
         try:
-            params = {
-                'location': f"{location.y},{location.x}",  
-                'radius': radius,
-                'key': self.api_key
+            headers = {
+                "Content-Type": "application/json",
+                "X-Goog-Api-Key": self.api_key,
+                "X-Goog-FieldMask": "*"
             }
-            
-            if type:
-                params['type'] = type
-            if keyword:
-                params['keyword'] = keyword
 
-            response = requests.get(self.nearby_url, params=params)
+            payload = {
+                "includedTypes": types if types else ["restaurant"],
+                 "maxResultCount": 10,
+                "locationRestriction": {
+                    "circle": {
+                        "center": {"latitude": latitude, "longitude": longitude},
+                        "radius": radius
+                    }
+                }
+            }
+
+            response = requests.post(self.nearby_url, json=payload, headers=headers)
             response.raise_for_status()
-            return response.json().get('results', [])
-            
+
+            return response.json().get("results", [])
+
         except Exception as e:
-            logger.error(f"Error searching nearby places: {str(e)}")
+            logger.error(f"Error fetching nearby places: {str(e)}")
             return None
 
     def get_place_details(self, place_id: str) -> Optional[Dict]:
         """Get detailed information about a specific place"""
         try:
+            base_url = self.details_url.format(place_id=place_id)
+           
             params = {
-                'place_id': place_id,
-                'key': self.api_key,
-                'fields': 'name,rating,formatted_phone_number,website,price_level,photos,reviews,opening_hours'
+                "key": self.api_key,
+                "fields": "id,displayName,rating,websiteUri,priceLevel,photos,reviews,currentOpeningHours"
             }
-
-            response = requests.get(self.details_url, params=params)
-            response.raise_for_status()
-            return response.json().get('result')
             
-        except Exception as e:
-            logger.error(f"Error getting place details: {str(e)}")
+            response = requests.get(base_url, params=params)
+            response.raise_for_status()
+
+            return response.json().get('result')
+        
+        except requests.RequestException as e:
+            logger.error(f"Error fetching place details: {str(e)}")
             return None
 
     def get_photo_url(self, photo_reference: str, max_width: int = 800) -> Optional[str]:
         """Get URL for a place photo"""
         try:
             params = {
-                'photoreference': photo_reference,
+                'maxwidth': max_width,
+                'photo_reference': photo_reference,
                 'key': self.api_key,
-                'maxwidth': max_width
             }
-
+            
             response = requests.get(self.photos_url, params=params)
-            return response.url if response.status_code == 200 else None
+            response.raise_for_status()
+
+            return response.json().get('url')
             
         except Exception as e:
             logger.error(f"Error getting photo URL: {str(e)}")

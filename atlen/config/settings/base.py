@@ -404,8 +404,8 @@ CHANNEL_LAYERS = {
 }
 
 GOOGLE_PLACES_API_KEY = config('GOOGLE_PLACES_API_KEY')
-GOOGLE_PLACES_NEARBY_URL = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json'
-GOOGLE_PLACES_DETAILS_URL = 'https://maps.googleapis.com/maps/api/place/details/json'
+GOOGLE_PLACES_NEARBY_URL = "https://places.googleapis.com/v1/places:searchNearby"
+GOOGLE_PLACES_DETAILS_URL = 'https://places.googleapis.com/v1/places/{place_id}'
 GOOGLE_PLACES_PHOTOS_URL = 'https://maps.googleapis.com/maps/api/place/photo'
 
 GOOGLE_OAUTH2_ANDROID_CLIENT_ID = config('GOOGLE_OAUTH2_ANDROID_CLIENT_ID')
