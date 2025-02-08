@@ -40,3 +40,5 @@ redis
 channels-redis
 hiredis
 daphne
+google-generativeai
+asgiref

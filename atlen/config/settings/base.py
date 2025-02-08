@@ -86,6 +86,7 @@ LOCAL_APPS = [
     "trip",
     "flights",
     "bucket_list",
+    "ai_assistant",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -424,3 +425,6 @@ AWS_S3_FILE_OVERWRITE = False
 AWS_DEFAULT_ACL = "private"
 AWS_S3_SIGNATURE_VERSION = "s3v4"
 AWS_S3_VERIFY = True
+
+GOOGLE_GEMINI_API_KEY = config("GOOGLE_GEMINI_API_KEY")
+GOOGLE_GEMINI_MODEL = "gemini-2.0-flash"

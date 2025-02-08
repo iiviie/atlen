@@ -50,6 +50,7 @@ urlpatterns += [
         name="api-docs",
     ),
     path("api/", include("bucket_list.urls", namespace="bucket_list")),
+    path("api/", include("ai_assistant.urls", namespace="ai_assistant")),
 ]
 
 if settings.DEBUG:
