@@ -87,6 +87,7 @@ LOCAL_APPS = [
     "flights",
     "bucket_list",
     "ai_assistant",
+    "hotels",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -392,6 +393,7 @@ SIMPLE_JWT = {
 }
 
 RAPIDAPI_KEY = env("RAPIDAPI_KEY", default="your-rapidapi-key-here")
+HOTEL_BOOKING_BASE_URL = "https://booking-com15.p.rapidapi.com/api/v1/hotels"
 
 ASGI_APPLICATION = "config.asgi.application"
 
@@ -426,5 +428,5 @@ AWS_DEFAULT_ACL = "private"
 AWS_S3_SIGNATURE_VERSION = "s3v4"
 AWS_S3_VERIFY = True
 
-GOOGLE_GEMINI_API_KEY = config("GOOGLE_GEMINI_API_KEY")
+GOOGLE_GEMINI_API_KEY = "hello"
 GOOGLE_GEMINI_MODEL = "gemini-2.0-flash"
