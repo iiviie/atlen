@@ -42,6 +42,7 @@ urlpatterns += [
     path("api/", include("flights.urls", namespace="flights")),
     path("api/", include("group_travel.urls", namespace="group_travel")),
     path("api/", include("hotels.urls", namespace="hotels")),
+    path("api/", include("activities.urls", namespace="activities")),
     # DRF auth token
     path("api/auth-token/", obtain_auth_token),
     path("api/schema/", SpectacularAPIView.as_view(), name="api-schema"),
