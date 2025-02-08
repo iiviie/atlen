@@ -21,39 +21,52 @@ class AIAssistantViewSet(viewsets.ViewSet):
 
     @action(detail=False, methods=['post'])
     def generate_itinerary(self, request, trip_pk=None):
-        trip = get_object_or_404(Trip, id=trip_pk)
-        
-        trip_data = {
-            'location': str(trip.location),
-            'start_date': trip.start_date,
-            'end_date': trip.end_date,
-            'companions': list(trip.companions.all()),
-        }
-        
-        # Run async code in sync context
-        itinerary_data = asyncio.run(self.ai_service.generate_itinerary(trip_data))
-        
-        if not itinerary_data:
+        try:
+            trip = get_object_or_404(Trip, id=trip_pk)
+            
+            trip_data = {
+                'location': str(trip.location),
+                'start_date': trip.start_date,
+                'end_date': trip.end_date,
+                'companions': list(trip.companions.all()),
+            }
+            
+            itinerary_data = asyncio.run(self.ai_service.generate_itinerary(trip_data))
+            
+            if not itinerary_data or 'days' not in itinerary_data:
+                return Response(
+                    {"error": "Failed to generate valid itinerary format"},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+            
+            itinerary = Itinerary.objects.create(
+                trip=trip,
+                title=f"AI Generated Itinerary - {trip.start_date}"
+            )
+            
+            try:
+                for day in itinerary_data['days']:
+                    for activity in day['activities']:
+                        time = datetime.strptime(activity['time'], '%H:%M').time()
+                        ItineraryItem.objects.create(
+                            itinerary=itinerary,
+                            time=time,
+                            activity=f"{activity['activity']} at {activity['location']}"
+                        )
+            except (KeyError, ValueError) as e:
+                itinerary.delete()
+                return Response(
+                    {"error": f"Invalid activity data format: {str(e)}"},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+            
+            return Response({"message": "Itinerary generated successfully"})
+            
+        except Exception as e:
             return Response(
-                {"error": "Failed to generate itinerary"},
+                {"error": f"Error generating itinerary: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-        
-        itinerary = Itinerary.objects.create(
-            trip=trip,
-            title=f"AI Generated Itinerary - {trip.start_date}"
-        )
-        
-        for day in itinerary_data['days']:
-            for activity in day['activities']:
-                time = datetime.strptime(activity['time'], '%H:%M').time()
-                ItineraryItem.objects.create(
-                    itinerary=itinerary,
-                    time=time,
-                    activity=f"{activity['activity']} at {activity['location']}"
-                )
-        
-        return Response({"message": "Itinerary generated successfully"})
 
     @action(detail=False, methods=['post'])
     def chat(self, request, trip_pk=None):
