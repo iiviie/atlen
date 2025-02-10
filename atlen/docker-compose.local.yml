@@ -1,3 +1,5 @@
+version: '3'
+
 volumes:
   atlen_local_postgres_data: {}
   atlen_local_postgres_data_backups: {}
@@ -13,6 +15,7 @@ services:
     depends_on:
       - postgres
       - redis
+      - kafka
     volumes:
       - .:/app:z
     env_file:
@@ -69,3 +72,36 @@ services:
     ports:
       - '5555:5555'
     command: /start-flower
+
+  zookeeper:
+    image: wurstmeister/zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka:
+    image: wurstmeister/kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: kafka
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_CREATE_TOPICS: "user_locations:1:1"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - zookeeper
+
+  location_service:
+    build:
+      context: ./location_service
+      dockerfile: Dockerfile
+    ports:
+      - "8001:8000"
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - API_KEY=${LOCATION_SERVICE_API_KEY}
+    depends_on:
+      - kafka

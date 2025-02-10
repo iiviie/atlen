@@ -1,16 +1,12 @@
 from django.contrib import admin
-from trip.models import Itinerary, ItineraryItem
+from .models import ChatMessage
 
-class ItineraryItemInline(admin.TabularInline):
-    model = ItineraryItem
-    extra = 0
-    readonly_fields = ('created_at', 'updated_at')
-
-@admin.register(Itinerary)
-class AIGeneratedItineraryAdmin(admin.ModelAdmin):
-    list_display = ('title', 'trip', 'created_at')
-    search_fields = ('title', 'trip__title')
-    readonly_fields = ('created_at', 'updated_at')
-    raw_id_fields = ('trip',)
+@admin.register(ChatMessage)
+class ChatMessageAdmin(admin.ModelAdmin):
+    list_display = ('user', 'trip', 'message', 'created_at')
+    list_filter = ('created_at', 'user')
+    search_fields = ('message', 'response', 'user__email', 'trip__title')
+    readonly_fields = ('created_at',)
+    raw_id_fields = ('user', 'trip')
     ordering = ('-created_at',)
-    inlines = [ItineraryItemInline]
+

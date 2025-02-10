@@ -88,9 +88,10 @@ LOCAL_APPS = [
     "flights",
     "bucket_list",
     "documents",
-    "expenses",
+    "expenses", 
     "ai_assistant",
     "hotels",
+    "travel_journal",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -433,3 +434,6 @@ AWS_S3_VERIFY = True
 
 GOOGLE_GEMINI_API_KEY = "hello"
 GOOGLE_GEMINI_MODEL = "gemini-2.0-flash"
+
+KAFKA_BOOTSTRAP_SERVERS = env.list("KAFKA_BOOTSTRAP_SERVERS", default=["kafka:9092"])
+KAFKA_TOPIC = env.str("KAFKA_TOPIC", default="user_locations")
