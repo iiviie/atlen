@@ -8,7 +8,6 @@ from typing import List
 from .serializers import NearbyPlacesSerializer, PlacePhotoSerializer  
 from .services import GooglePlacesService
 
-# Create your views here.
 class PlacesViewSet(ViewSet):
     permission_classes = [IsAuthenticated]
     
