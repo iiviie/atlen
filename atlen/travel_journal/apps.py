@@ -10,8 +10,9 @@ class TravelJournalConfig(AppConfig):
     name = 'travel_journal'
 
     def ready(self):
-        if 'runserver' in sys.argv:
+        if not any(arg.startswith('celery') for arg in sys.argv):
             try:
+                logger.info("Starting Kafka consumer...")
                 from .kafka_consumer import TravelJournalConsumer
                 consumer = TravelJournalConsumer()
                 consumer.start()
