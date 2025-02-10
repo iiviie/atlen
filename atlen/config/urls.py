@@ -51,6 +51,7 @@ urlpatterns += [
     ),
     path("api/", include("bucket_list.urls", namespace="bucket_list")),
     path("api/", include("ai_assistant.urls", namespace="ai_assistant")),
+    path("api/", include("expenses.urls", namespace="expenses")),
 ]
 
 if settings.DEBUG:

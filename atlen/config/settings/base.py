@@ -83,9 +83,12 @@ THIRD_PARTY_APPS = [
 LOCAL_APPS = [
     "authentication",
     "accounts",
+    "activities",
     "trip",
     "flights",
     "bucket_list",
+    "documents",
+    "expenses",
     "ai_assistant",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps

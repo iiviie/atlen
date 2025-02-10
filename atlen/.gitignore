@@ -3,7 +3,8 @@
 __pycache__/
 *.py[cod]
 *$py.class
-
+feature_doc.txt
+cuurently_not_implemented.txt
 # C extensions
 *.so
 
