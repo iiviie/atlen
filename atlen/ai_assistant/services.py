@@ -5,6 +5,8 @@ import json
 
 class GeminiService:
     def __init__(self):
+        print(f"API Key length: {len(settings.GOOGLE_GEMINI_API_KEY)}")  # Don't print the full key
+        print(f"Model name: {settings.GOOGLE_GEMINI_MODEL}")
         genai.configure(api_key=settings.GOOGLE_GEMINI_API_KEY)
         self.model = genai.GenerativeModel(settings.GOOGLE_GEMINI_MODEL)
         
@@ -12,12 +14,13 @@ class GeminiService:
         prompt = self._create_itinerary_prompt(trip_data)
         
         try:
+            print("Attempting to generate content...")
             response = await self.model.generate_content_async(prompt)
+            print(f"Response received: {type(response)}")
             
-            # Extract the text content and clean it
             response_text = response.text.strip()
+            print(f"Response text length: {len(response_text)}")
             
-            # Try to find JSON content within the response
             start_idx = response_text.find('{')
             end_idx = response_text.rfind('}') + 1
             
@@ -26,15 +29,17 @@ class GeminiService:
                 try:
                     itinerary_data = json.loads(json_str)
                     return itinerary_data
-                except json.JSONDecodeError:
-                    print(f"Failed to parse JSON: {json_str}")
+                except json.JSONDecodeError as je:
+                    print(f"JSON decode error: {str(je)}")
                     return None
             else:
-                print(f"No JSON found in response: {response_text}")
+                print(f"No JSON found in response: {response_text[:100]}...")  # Print first 100 chars
                 return None
             
         except Exception as e:
-            print(f"Error generating itinerary: {str(e)}")
+            print(f"Error type: {type(e)}")
+            print(f"Error details: {str(e)}")
+            print(f"Error args: {e.args}")
             return None
             
     def _create_itinerary_prompt(self, trip_data: Dict[str, Any]) -> str:

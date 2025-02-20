@@ -41,28 +41,52 @@ class TripListSerializer(serializers.ModelSerializer):
     location = serializers.StringRelatedField()
     creator = UserBasicSerializer(read_only=True)
     companion_count = serializers.IntegerField(source='companions.count', read_only=True)
+    image_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Trip
         fields = [
             'id', 'title', 'start_date', 'end_date',
-            'location', 'status', 'creator', 'companion_count'
+            'location', 'status', 'creator', 'companion_count',
+            'image', 'image_url'
         ]
-        read_only_fields = ['id', 'creator']
+        read_only_fields = ['id', 'creator', 'image_url']
+
+    def get_image_url(self, obj):
+        if obj.image:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.image.url)
+        return None
 
 class TripDetailSerializer(serializers.ModelSerializer):
     location = LocationSerializer()
     creator = UserBasicSerializer(read_only=True)
     companions = UserBasicSerializer(many=True, read_only=True)
+    image_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Trip
         fields = [
-            'id', 'title', 'description', 'start_date', 'end_date',
+            'id', 'title', 'start_date', 'end_date',
             'creator', 'location', 'companions', 'status',
-            'created_at', 'updated_at'
+            'created_at', 'updated_at', 'image', 'image_url'
         ]
-        read_only_fields = ['id', 'creator', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'creator', 'created_at', 'updated_at', 'image_url']
+        extra_kwargs = {
+            'title': {'required': True},
+            'start_date': {'required': True},
+            'end_date': {'required': True},
+            'location': {'required': True},
+            'status': {'required': False},
+        }
+
+    def get_image_url(self, obj):
+        if obj.image:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.image.url)
+        return None
 
     def create(self, validated_data):
         location_data = validated_data.pop('location')

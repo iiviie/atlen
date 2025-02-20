@@ -6,6 +6,7 @@ from pathlib import Path
 from decouple import config
 from django.core.exceptions import ImproperlyConfigured
 from datetime import timedelta
+import os
 
 import environ
 
@@ -171,7 +172,7 @@ STATICFILES_FINDERS = [
 # MEDIA
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#media-root
-MEDIA_ROOT = str(APPS_DIR / "media")
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # https://docs.djangoproject.com/en/dev/ref/settings/#media-url
 MEDIA_URL = "/media/"
 
@@ -431,7 +432,7 @@ AWS_DEFAULT_ACL = "private"
 AWS_S3_SIGNATURE_VERSION = "s3v4"
 AWS_S3_VERIFY = True
 
-GOOGLE_GEMINI_API_KEY = "hello"
+GOOGLE_GEMINI_API_KEY = config('GOOGLE_GEMINI_API_KEY')
 GOOGLE_GEMINI_MODEL = "gemini-2.0-flash"
 
 KAFKA_BOOTSTRAP_SERVERS = env.list("KAFKA_BOOTSTRAP_SERVERS", default=["kafka:9092"])

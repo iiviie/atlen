@@ -2,6 +2,7 @@ from django.contrib.gis.db import models as gis_models
 import uuid
 from django.db import models
 from django.conf import settings
+import os
 
 class Location(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -33,7 +34,6 @@ class Trip(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     title = models.CharField(max_length=255)
-    description = models.TextField(blank=True)
     start_date = models.DateField()
     end_date = models.DateField()
     creator = models.ForeignKey(
@@ -54,10 +54,17 @@ class Trip(models.Model):
     status = models.CharField(
         max_length=20,
         choices=TRIP_STATUS_CHOICES,
-        default='PLANNED'
+        default='PLANNED',
+        blank=True
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    image = models.ImageField(
+        upload_to='trip_images/',
+        null=True,
+        blank=True,
+        help_text='Cover image for the trip'
+    )
 
     class Meta:
         ordering = ['-start_date']
