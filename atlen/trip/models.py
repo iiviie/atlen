@@ -112,15 +112,43 @@ class Itinerary(models.Model):
     def __str__(self):
         return f"{self.title} - {self.trip.title}"
 
-class ItineraryItem(models.Model):
+class ItineraryDay(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     itinerary = models.ForeignKey(
         Itinerary,
         on_delete=models.CASCADE,
-        related_name='items'
+        related_name='days'
     )
+    date = models.DateField()
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['date']
+        unique_together = ['itinerary', 'date']
+
+    def __str__(self):
+        return f"Day {self.date} - {self.itinerary.title}"
+
+class ItineraryItem(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    day = models.ForeignKey(
+        ItineraryDay,
+        on_delete=models.CASCADE,
+        related_name='activities'
+    )
+    activity = models.ForeignKey(
+        'activities.Activity',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='itinerary_items'
+    )
+    custom_activity = models.CharField(max_length=255, blank=True)
     time = models.TimeField()
-    activity = models.CharField(max_length=255)
+    duration = models.DurationField(null=True, blank=True)
+    notes = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -128,4 +156,5 @@ class ItineraryItem(models.Model):
         ordering = ['time']
 
     def __str__(self):
-        return f"{self.activity} at {self.time} - {self.itinerary.title}"
+        activity_name = self.activity.name if self.activity else self.custom_activity
+        return f"{activity_name} at {self.time} - {self.day.date}"

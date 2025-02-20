@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from trip.models import Location, Trip, ChecklistItem, Itinerary, ItineraryItem
+from trip.models import Location, Trip, ChecklistItem, Itinerary, ItineraryItem, ItineraryDay
 
 User = get_user_model()
 
@@ -115,17 +115,41 @@ class ChecklistItemSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created_at', 'updated_at']
 
 class ItineraryItemSerializer(serializers.ModelSerializer):
+    activity_details = serializers.SerializerMethodField()
+
     class Meta:
         model = ItineraryItem
-        fields = ['id', 'time', 'activity', 'created_at', 'updated_at']
+        fields = [
+            'id', 'activity', 'custom_activity', 'time',
+            'duration', 'notes', 'activity_details',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+    def get_activity_details(self, obj):
+        if obj.activity:
+            return {
+                'name': obj.activity.name,
+                'type': obj.activity.get_activity_type_display(),
+                'location': obj.activity.location.name,
+                'rating': obj.activity.rating
+            }
+        return None
+
+class ItineraryDaySerializer(serializers.ModelSerializer):
+    activities = ItineraryItemSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = ItineraryDay
+        fields = ['id', 'date', 'notes', 'activities', 'created_at', 'updated_at']
         read_only_fields = ['id', 'created_at', 'updated_at']
 
 class ItinerarySerializer(serializers.ModelSerializer):
-    items = ItineraryItemSerializer(many=True, read_only=True)
+    days = ItineraryDaySerializer(many=True, read_only=True)
 
     class Meta:
         model = Itinerary
-        fields = ['id', 'title', 'items', 'created_at', 'updated_at']
+        fields = ['id', 'title', 'days', 'created_at', 'updated_at']
         read_only_fields = ['id', 'created_at', 'updated_at']
 
 class TripStatsSerializer(serializers.Serializer):
