@@ -1,0 +1,107 @@
+version: '3'
+
+volumes:
+  atlen_local_postgres_data: {}
+  atlen_local_postgres_data_backups: {}
+  atlen_local_redis_data: {}
+
+services:
+  django: &django
+    build:
+      context: .
+      dockerfile: ./compose/local/django/Dockerfile
+    image: atlen_local_django
+    container_name: atlen_local_django
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+    volumes:
+      - .:/app:z
+    env_file:
+      - ./.envs/.local/.django
+      - ./.envs/.local/.postgres
+    ports:
+      - '8000:8000'
+    command: /start
+
+  postgres:
+    build:
+      context: .
+      dockerfile: ./compose/production/postgres/Dockerfile
+    image: atlen_production_postgres
+    container_name: atlen_local_postgres
+    volumes:
+      - atlen_local_postgres_data:/var/lib/postgresql/data
+      - atlen_local_postgres_data_backups:/backups
+    env_file:
+      - ./.envs/.local/.postgres
+
+  redis:
+    image: docker.io/redis:6
+    container_name: atlen_local_redis
+    
+    volumes:
+      - atlen_local_redis_data:/data
+    
+
+  celeryworker:
+    <<: *django
+    image: atlen_local_celeryworker
+    container_name: atlen_local_celeryworker
+    depends_on:
+      - redis
+      - postgres
+    ports: []
+    command: /start-celeryworker
+
+  celerybeat:
+    <<: *django
+    image: atlen_local_celerybeat
+    container_name: atlen_local_celerybeat
+    depends_on:
+      - redis
+      - postgres
+    ports: []
+    command: /start-celerybeat
+
+  flower:
+    <<: *django
+    image: atlen_local_flower
+    container_name: atlen_local_flower
+    ports:
+      - '5555:5555'
+    command: /start-flower
+
+  zookeeper:
+    image: wurstmeister/zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka:
+    image: wurstmeister/kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: kafka
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_CREATE_TOPICS: "user_locations:1:1"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - zookeeper
+
+  location_service:
+    build:
+      context: ./location_service
+      dockerfile: Dockerfile
+    ports:
+      - "8001:8000"
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - API_KEY=${LOCATION_SERVICE_API_KEY}
+    depends_on:
+      - kafka
