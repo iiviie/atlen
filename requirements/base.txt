@@ -49,5 +49,5 @@ kafka-python
 fastapi
 uvicorn
 pydantic
-six==1.16.0
+six==1.17.0
 kafka-python==2.0.2
