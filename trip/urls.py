@@ -2,7 +2,8 @@ from django.urls import path, include
 from rest_framework_nested import routers
 from .views import (
     TripViewSet, CompanionViewSet, ChecklistViewSet,
-    ItineraryViewSet, ItineraryItemViewSet, TripStatsViewSet
+    ItineraryViewSet, ItineraryItemViewSet, TripStatsViewSet,
+    ItineraryDayViewSet
 )
 
 # Create the main router
@@ -17,7 +18,11 @@ trip_router.register(r'itineraries', ItineraryViewSet, basename='trip-itinerarie
 
 # Create router for itinerary-level nested resources
 itinerary_router = routers.NestedDefaultRouter(trip_router, r'itineraries', lookup='itinerary')
-itinerary_router.register(r'items', ItineraryItemViewSet, basename='itinerary-items')
+itinerary_router.register(r'days', ItineraryDayViewSet, basename='itinerary-days')
+
+# Create router for day-level nested resources
+day_router = routers.NestedDefaultRouter(itinerary_router, r'days', lookup='day')
+day_router.register(r'activities', ItineraryItemViewSet, basename='day-activities')
 
 # Create router for trip stats
 router.register(r'stats', TripStatsViewSet, basename='trip-stats')
@@ -28,4 +33,5 @@ urlpatterns = [
     path('', include(router.urls)),
     path('', include(trip_router.urls)),
     path('', include(itinerary_router.urls)),
+    path('', include(day_router.urls)),
 ]

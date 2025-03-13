@@ -4,12 +4,12 @@ from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 from django.db.models import Count, Q
 from django.contrib.auth import get_user_model
-from trip.models import Trip, ChecklistItem, Itinerary, ItineraryItem
+from trip.models import Trip, ChecklistItem, Itinerary, ItineraryItem, ItineraryDay
 from group_travel.models import GroupChat
 from trip.serializers import (
     TripListSerializer, TripDetailSerializer, ChecklistItemSerializer,
     ItinerarySerializer, ItineraryItemSerializer, TripStatsSerializer,
-    UserBasicSerializer
+    UserBasicSerializer, ItineraryDaySerializer
 )
 from trip.permissions import *
 
@@ -121,15 +121,15 @@ class ItineraryViewSet(viewsets.ModelViewSet):
         trip = get_object_or_404(Trip, id=self.kwargs['trip_pk'])
         serializer.save(trip=trip)
 
-class ItineraryItemViewSet(viewsets.ModelViewSet):
-    serializer_class = ItineraryItemSerializer
+class ItineraryDayViewSet(viewsets.ModelViewSet):
+    serializer_class = ItineraryDaySerializer
     permission_classes = [IsAuthenticated, IsTripParticipant]
 
     def get_queryset(self):
-        return ItineraryItem.objects.filter(
+        return ItineraryDay.objects.filter(
             itinerary_id=self.kwargs['itinerary_pk'],
             itinerary__trip_id=self.kwargs['trip_pk']
-        ).order_by('time')
+        ).order_by('date')
 
     def perform_create(self, serializer):
         itinerary = get_object_or_404(
@@ -138,6 +138,26 @@ class ItineraryItemViewSet(viewsets.ModelViewSet):
             trip_id=self.kwargs['trip_pk']
         )
         serializer.save(itinerary=itinerary)
+
+class ItineraryItemViewSet(viewsets.ModelViewSet):
+    serializer_class = ItineraryItemSerializer
+    permission_classes = [IsAuthenticated, IsTripParticipant]
+
+    def get_queryset(self):
+        return ItineraryItem.objects.filter(
+            day_id=self.kwargs['day_pk'],
+            day__itinerary_id=self.kwargs['itinerary_pk'],
+            day__itinerary__trip_id=self.kwargs['trip_pk']
+        ).order_by('time')
+
+    def perform_create(self, serializer):
+        day = get_object_or_404(
+            ItineraryDay,
+            id=self.kwargs['day_pk'],
+            itinerary_id=self.kwargs['itinerary_pk'],
+            itinerary__trip_id=self.kwargs['trip_pk']
+        )
+        serializer.save(day=day)
 
 class TripStatsViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
