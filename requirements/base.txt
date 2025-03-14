@@ -13,7 +13,7 @@ python-decouple
 # Django
 # ------------------------------------------------------------------------------
 django==5.0.10 
-django-environ==0.11.2  
+django-environ==0.12.0  
 django-model-utils==5.0.0  
 django-allauth[mfa]==65.3.1  
 django-crispy-forms==2.3  
